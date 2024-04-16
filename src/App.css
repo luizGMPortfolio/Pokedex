@@ -157,18 +157,59 @@ img{
 .fighting{
   background-color: #80351A;
 }
-.menu{
+.type, .Generations, .Gen, .Order{
+  background-color: #555555;
+}
+.header{
   width: 100%;
   height: 100px;
-  background-color: #12f0cb;
-  margin-bottom: 20px;
+  display: flex;
 }
-.menu img{
+.logo{
+  width: 30%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.header img{
   background-color: transparent;
   border: none;
   width: 50px;
   height: 50px;
 }
+.menu{
+  width: 70%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 .search{
-  width: 100%;
+  display: flex;
+  width: 90%;
+  height: 50px;
+}
+.input{
+  display: flex;
+  justify-content: start;
+  align-items: center;
+  width: 40%;
+  gap: 5px;
+}
+.filter{
+  width: 60%;
+  display: flex;
+  justify-content: end;
+  align-items: center;
+  gap: 10px;
+
+}
+.search i{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 40px;
+  height: 40px;
+  background-color: #555555;
+  border-radius: 50%;
+  color: #fff;
 }

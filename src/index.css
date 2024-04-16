@@ -6,7 +6,7 @@ html,body{
     font-style: normal;
     margin: 0;
     padding: 0;
-    background-color: #1c1c1c;
+    background-color: #929292
     
 }
 
@@ -19,7 +19,97 @@ h3{
     border-radius: 10px;
     letter-spacing: 1px;
 }
+h4{
+  margin: 0;
+}
 
-select{
-  width: 100px;
+.f-types,.f-order{
+  width: 120px;
+  height: 40px;
+
+}
+.f-generations{
+  width: 150px;
+  height: 40px;
+}
+
+.select{
+  height: 100%;
+  border-radius: 15px;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-size: 25px;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+
+.options{
+  width: 100%;
+  padding: 2px;
+  margin: 0;
+  position: relative;
+  text-align: center;
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 3px;
+  background-color: #555555;
+  border-radius: 10px;
+  padding: 5px 0;
+}
+.show{
+  display: flex;
+}
+li{
+  width: 90%;
+  height: 24px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+li:hover{
+  background-color: #929292;
+}
+select:hover{
+  background-color: #bbbaba;
+}
+option{
+  padding: 2px;
+}
+
+input[type='search']{
+  padding-left: 20px;
+  font-size: 18px;
+  width: 400px;
+  height: 50px;
+  border-radius: 20px;
+  border: none;
+  background-color: #555555;
+  color: #fff;
+}
+
+label{
+  color: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+menu{
+  margin-left: 150px;
+  display: flex;
+  gap: 20px;
+  padding: 0;
+}
+li{
+  list-style: none;
+  font-size: 26px;
+  color: #fff;
 }

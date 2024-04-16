@@ -7,55 +7,207 @@ import img from './assets/pokebola.png'
 function App() {
 
     const [pokemons, setPokemons] = useState([]); // Estado para armazenar os usuários
+    const [Allpokemons, setAllPokemons] = useState([]);
     const [error, setError] = useState(null); // Estado para armazenar um possível erro
+
+    const [show, setShow] = useState('');
+    const [type, setType] = useState('type');
+    const [Gen, setGen] = useState(0);
+    const [Order, setOrder] = useState('Order');
+    const [name, setName] = useState('');
+
+    console.log(name)
 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 // Fazendo a requisição para a API e armazenando a resposta
-                const info = [];
-                for (let i = 1; i <= 151; i++) {
-                    const response = await axios.get("https://pokeapi.co/api/v2/pokemon/" + i + "/");
-                    info.push(response.data);
+                var info = [];
+                var num = 1;
+                for (let i = 1; i <= 9; i++) {
+                    for (let j = 1; j <= 114; j++) {
+                        if (num === 1026) {
+                            break;
+                        }
+                        else {
+                            const response = await axios.get("https://pokeapi.co/api/v2/pokemon/" + num + "/");
+                            info.push(response.data);
+                            num = num + 1;
+                        }
+                    }
+                    num = num + 1;
+                    setPokemons(info);
                 }
-                console.log(info)
-                setPokemons(info)
-                const info1 = [];
-                for (let j = 1; j <= 1025; j++) {
-                    const response1 = await axios.get("https://pokeapi.co/api/v2/pokemon/" + j + "/");
-                    info1.push(response1.data);
-                }
-                console.log(info1)
-                setPokemons(info1)
-
+                setAllPokemons(pokemons)
             } catch (error) {
                 setError(error); // Armazena qualquer erro que ocorra
             }
         };
-
         fetchData(); // Chama a função fetchData ao montar o componente
-    }, []); // Array de dependências vazio significa que o efeito roda apenas uma vez
+    }, []);
 
+
+    useEffect(() => {
+        const filter = async () => {
+            const gens = [0, 151, 251, 386, 494, 649, 721, 809, 905, 1025]
+
+            if (Gen === 0) {
+                var info = [];
+                Allpokemons.map(pokemon => {
+                    if (type === 'type') {
+                        info.push(pokemon);
+                    }
+                    else {
+                        pokemon.types.map(ty => {
+                            if (type === ty.type.name) {
+                                info.push(pokemon);
+                            }
+                        });
+                    }
+
+                });
+                setPokemons(info);
+                var info = [];
+            }
+            else {
+
+                try {
+                    // Fazendo a requisição para a API e armazenando a resposta
+                    var info = [];
+                    for (let j = gens[Gen - 1] + 1; j <= gens[Gen]; j++) {
+                        const response = await axios.get("https://pokeapi.co/api/v2/pokemon/" + j + "/");
+                        if (type === 'type') {
+                            info.push(response.data);
+                        }
+                        else {
+                            response.data.types.map(ty => {
+                                if (type === ty.type.name) {
+                                    info.push(response.data);
+                                }
+                            });
+                        }
+
+
+                    }
+                    setPokemons(info);
+                    var info = [];
+                } catch (error) {
+                    setError(error); // Armazena qualquer erro que ocorra
+                }
+            }
+        }
+        filter(); // Chama a função fetchData ao montar o componente
+    }, [Gen, type, Order]);
+
+
+    useEffect(() => {
+        if(name === ''){
+            setPokemons(Allpokemons)
+        }
+        else{
+            var info = [];
+        Allpokemons.map(pokemon => {
+            console.log(name)
+            if (pokemon.name === name){
+                info.push(pokemon);
+            }
+        })
+        setPokemons(info);
+        }
+    }, [name]);
+
+
+    
     return (
         <div className='App'>
-            <div className='menu'>
-                <img src={img} alt="" />
+            <div className='header'>
+                <div className='logo'>
+                    <img src={img} alt="" />
+                </div>
+
+                <div className='menu'>
+                    <menu>
+                        <li>Pokedex</li>
+                        <li>Games</li>
+                        <li>References</li>
+                    </menu>
+                </div>
             </div>
             <div className='search'>
-                <input type="search" />
-                <i class="fa-solid fa-magnifying-glass"></i>
-                <select name="types" id="types">
-                    <option value="all" selected>All</option>
-                    <option value="water">water</option>
-                    <option value="glass">glass</option>
-                    <option value="fire">fire</option>
-                    <option value="fire">electric</option>
-                </select>
+                <div className='input'>
+                    <input type="search" placeholder='Search' onChange={(e) => setName(e.target.value)}/>
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </div>
+
+                <div className='filter'>
+                    <div className='f-types' onMouseMove={() => setShow('type')} onMouseLeave={() => setShow('')}>
+                        <div className={`select ${type != 'type' ? type : 'type'}`}>
+                            <h4>{type}</h4>
+                        </div>
+                        <ul name="options" id="options" className={`options ${show === 'type' ? 'show' : ''}`}>
+                            <li value="water" onClick={() => setType('type')} className='type'>type</li>
+                            <li value="water" onClick={() => setType('water')} className='water'>water</li>
+                            <li value="glass" onClick={() => setType('grass')} className='grass'>grass</li>
+                            <li value="fire" onClick={() => setType('fire')} className='fire'>fire</li>
+                            <li value="fire" onClick={() => setType('electric')} className='electric'>electric</li>
+                            <li value="Flying" onClick={() => setType('flying')} className='flying'>Flying</li>
+                            <li value="Fighting" onClick={() => setType('fighting')} className='fighting'>Fighting</li>
+                            <li value="Poison" onClick={() => setType('poison')} className='poison'>Poison</li>
+                            <li value="Ground" onClick={() => setType('ground')} className='ground'>Ground</li>
+                            <li value="Rock" onClick={() => setType('rock')} className='rock'>Rock</li>
+                            <li value="Psychic" onClick={() => setType('psychic')} className='psychic'>Psychic</li>
+                            <li value="Ice" onClick={() => setType('ice')} className='ice'>Ice</li>
+                            <li value="Bug" onClick={() => setType('bug')} className='bug'>Bug</li>
+                            <li value="Ghost" onClick={() => setType('ghost')} className='ghost'>Ghost</li>
+                            <li value="Steel" onClick={() => setType('ateel')} className='steel'>Steel</li>
+                            <li value="Dragon" onClick={() => setType('dragon')} className='dragon'>Dragon</li>
+                            <li value="Dark" onClick={() => setType('dark')} className='dark'>Dark</li>
+                            <li value="Fairy" onClick={() => setType('fairy')} className='fairy'>Fairy </li>
+                        </ul>
+                    </div>
+
+                    <div className='f-generations' onMouseMove={() => setShow('Generations')} onMouseLeave={() => setShow('')}>
+                        <div className={`select ${Gen != 0 ? Gen : ''} Generations`}>
+                            <h4>{Gen != 0 ? `${Gen}° Gen` : 'Generations'}</h4>
+                        </div>
+                        <ul name="options" id="options" className={`options ${show === 'Generations' ? 'show' : ''}`}>
+                            <li value="1" onClick={() => setGen(0)} className=''>Generations</li>
+                            <li value="1" onClick={() => setGen(1)} className=''>1° Gen</li>
+                            <li value="2" onClick={() => setGen(2)} className=''>2° Gen</li>
+                            <li value="3" onClick={() => setGen(3)} className=''>3° Gen</li>
+                            <li value="4" onClick={() => setGen(4)} className=''>4° Gen</li>
+                            <li value="5" onClick={() => setGen(5)} className=''>5° Gen</li>
+                            <li value="6" onClick={() => setGen(6)} className=''>6° Gen</li>
+                            <li value="7" onClick={() => setGen(7)} className=''>7° Gen</li>
+                            <li value="8" onClick={() => setGen(8)} className=''>8° Gen</li>
+                            <li value="9" onClick={() => setGen(9)} className=''>9° Gen</li>
+                        </ul>
+                    </div>
+
+                    <div className='f-order' onMouseMove={() => setShow('Order')} onMouseLeave={() => setShow('')}>
+                        <div className={`select ${Order != 'Order' ? Order : 'Order'} Order`}>
+                            <h4>{Order}</h4>
+                        </div>
+                        <ul name="options" id="options" className={`options ${show === 'Order' ? 'show' : ''}`}>
+                            <li value="Order" onClick={() => setOrder('Order')}>Order</li>
+                            <li value="number" onClick={() => setOrder('by number')}>By number</li>
+                            <li value="cresente" onClick={() => setOrder('Cresente')}>cresente</li>
+                            <li value="decresente" onClick={() => setOrder('Degresente')}>degresente</li>
+                            <li value="Alfabect" onClick={() => setOrder('Alfabetc')}>Alfabetc</li>
+                        </ul>
+
+                    </div>
+
+                    <input type='checkbox' />
+                    <label htmlFor="">Only Legendary</label>
+                    <input type="checkbox" />
+                    <label htmlFor="">Only Semi-Legendary</label>
+                </div>
+
             </div>
             {pokemons && pokemons.map(pokemon => (
-                <div className={`card`}>
+                <div className="card">
                     <div className='img'>
-                        {console.log(pokemon.sprites.other)}
                         <img src={pokemon.sprites.other["official-artwork"].front_default} alt="" />
                     </div>
 
