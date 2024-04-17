@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
+import { useInView } from 'react-intersection-observer';
 import axios from 'axios';
 import './App.css'
 
@@ -8,7 +9,14 @@ function App() {
 
     const [pokemons, setPokemons] = useState([]); // Estado para armazenar os usuários
     const [Allpokemons, setAllPokemons] = useState([]);
+    const [RendersMax, setRendersMax] = useState(1);
+    const [RendersMin, setRendersMin] = useState(0);
+    const [Gens, setGens] = useState([0, 151, 251, 386, 494, 649, 721, 809, 905, 1025])
     const [error, setError] = useState(null); // Estado para armazenar um possível erro
+
+    const [ref, inView] = useInView({
+        threshold: 0 // 0 significa que o callback será executado assim que um pixel for visível
+    });
 
     const [show, setShow] = useState('');
     const [type, setType] = useState('type');
@@ -16,108 +24,52 @@ function App() {
     const [Order, setOrder] = useState('Order');
     const [name, setName] = useState('');
 
-    console.log(name)
-
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                // Fazendo a requisição para a API e armazenando a resposta
-                var info = [];
-                var num = 1;
-                for (let i = 1; i <= 9; i++) {
-                    for (let j = 1; j <= 114; j++) {
-                        if (num === 1026) {
-                            break;
-                        }
-                        else {
-                            const response = await axios.get("https://pokeapi.co/api/v2/pokemon/" + num + "/");
-                            info.push(response.data);
-                            num = num + 1;
-                        }
-                    }
-                    num = num + 1;
-                    setPokemons(info);
-                }
-                setAllPokemons(pokemons)
-            } catch (error) {
-                setError(error); // Armazena qualquer erro que ocorra
-            }
-        };
-        fetchData(); // Chama a função fetchData ao montar o componente
-    }, []);
 
 
-    useEffect(() => {
-        const filter = async () => {
-            const gens = [0, 151, 251, 386, 494, 649, 721, 809, 905, 1025]
 
-            if (Gen === 0) {
-                var info = [];
-                Allpokemons.map(pokemon => {
-                    if (type === 'type') {
-                        info.push(pokemon);
-                    }
-                    else {
-                        pokemon.types.map(ty => {
-                            if (type === ty.type.name) {
-                                info.push(pokemon);
-                            }
-                        });
-                    }
-
-                });
-                setPokemons(info);
-                var info = [];
-            }
-            else {
-
-                try {
-                    // Fazendo a requisição para a API e armazenando a resposta
-                    var info = [];
-                    for (let j = gens[Gen - 1] + 1; j <= gens[Gen]; j++) {
-                        const response = await axios.get("https://pokeapi.co/api/v2/pokemon/" + j + "/");
-                        if (type === 'type') {
-                            info.push(response.data);
-                        }
-                        else {
-                            response.data.types.map(ty => {
-                                if (type === ty.type.name) {
-                                    info.push(response.data);
-                                }
-                            });
-                        }
-
-
-                    }
-                    setPokemons(info);
-                    var info = [];
-                } catch (error) {
-                    setError(error); // Armazena qualquer erro que ocorra
-                }
-            }
-        }
-        filter(); // Chama a função fetchData ao montar o componente
-    }, [Gen, type, Order]);
-
-
-    useEffect(() => {
-        if(name === ''){
-            setPokemons(Allpokemons)
-        }
-        else{
+    const fetchData = async () => {
+        try {
+            // Fazendo a requisição para a API e armazenando a resposta
             var info = [];
-        Allpokemons.map(pokemon => {
-            console.log(name)
-            if (pokemon.name === name){
-                info.push(pokemon);
+
+            for (let j = Gens[RendersMin] + 1; j <= Gens[RendersMax]; j++) {
+
+                const response = await axios.get("https://pokeapi.co/api/v2/pokemon/" + j + "/");
+                if (type === 'type') {
+                    info.push(response.data);
+                }
+                else {
+                    response.data.types.map(ty => {
+                        if (type === ty.type.name) {
+                            info.push(response.data);
+                        }
+                    });
+                }
             }
-        })
-        setPokemons(info);
+            setPokemons(info);
+            setAllPokemons(pokemons);
+        } catch (error) {
+            setError(error); // Armazena qualquer erro que ocorra
         }
-    }, [name]);
+    };
+
+    useEffect(() => {
+        const handleScroll = async () => {
+            if (inView) {
+                setRendersMax(RendersMax + 1)
+            }
+        }
+        handleScroll();
+    }, [inView]);
 
 
-    
+    useEffect(() => {
+        fetchData(); // Chama a função fetchData ao montar o componente
+    }, [RendersMax, RendersMin, type, Order]);
+
+
+
+
     return (
         <div className='App'>
             <div className='header'>
@@ -135,7 +87,7 @@ function App() {
             </div>
             <div className='search'>
                 <div className='input'>
-                    <input type="search" placeholder='Search' onChange={(e) => setName(e.target.value)}/>
+                    <input type="search" placeholder='Search' onChange={(e) => setName(e.target.value)} />
                     <i class="fa-solid fa-magnifying-glass"></i>
                 </div>
 
@@ -171,16 +123,16 @@ function App() {
                             <h4>{Gen != 0 ? `${Gen}° Gen` : 'Generations'}</h4>
                         </div>
                         <ul name="options" id="options" className={`options ${show === 'Generations' ? 'show' : ''}`}>
-                            <li value="1" onClick={() => setGen(0)} className=''>Generations</li>
-                            <li value="1" onClick={() => setGen(1)} className=''>1° Gen</li>
-                            <li value="2" onClick={() => setGen(2)} className=''>2° Gen</li>
-                            <li value="3" onClick={() => setGen(3)} className=''>3° Gen</li>
-                            <li value="4" onClick={() => setGen(4)} className=''>4° Gen</li>
-                            <li value="5" onClick={() => setGen(5)} className=''>5° Gen</li>
-                            <li value="6" onClick={() => setGen(6)} className=''>6° Gen</li>
-                            <li value="7" onClick={() => setGen(7)} className=''>7° Gen</li>
-                            <li value="8" onClick={() => setGen(8)} className=''>8° Gen</li>
-                            <li value="9" onClick={() => setGen(9)} className=''>9° Gen</li>
+                            <li value="1" onClick={() => setRenders(1)} className=''>Generations</li>
+                            <li value="1" onClick={() => setRenders(1)} className=''>1° Gen</li>
+                            <li value="2" onClick={() => setRenders(2)} className=''>2° Gen</li>
+                            <li value="3" onClick={() => setRenders(3)} className=''>3° Gen</li>
+                            <li value="4" onClick={() => setRenders(4)} className=''>4° Gen</li>
+                            <li value="5" onClick={() => setRenders(5)} className=''>5° Gen</li>
+                            <li value="6" onClick={() => setRenders(6)} className=''>6° Gen</li>
+                            <li value="7" onClick={() => setRenders(7)} className=''>7° Gen</li>
+                            <li value="8" onClick={() => setRenders(8)} className=''>8° Gen</li>
+                            <li value="9" onClick={() => setRenders(9)} className=''>9° Gen</li>
                         </ul>
                     </div>
 
@@ -231,6 +183,7 @@ function App() {
 
                 </div>
             ))}
+            <div ref={ref}>Carregando mais itens...</div>
         </div>
     );
 }

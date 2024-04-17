@@ -1,0 +1,74 @@
+    useEffect(() => {
+        const filter = async () => {
+            const gens = [0, 151, 251, 386, 494, 649, 721, 809, 905, 1025]
+
+            if (Gen === 0) {
+                var info = [];
+                Allpokemons.map(pokemon => {
+                    if (type === 'type') {
+                        info.push(pokemon);
+                    }
+                    else {
+                        pokemon.types.map(ty => {
+                            if (type === ty.type.name) {
+                                info.push(pokemon);
+                            }
+                        });
+                    }
+
+                });
+                setPokemons(info);
+                var info = [];
+            }
+            else {
+
+                try {
+                    // Fazendo a requisição para a API e armazenando a resposta
+                    var info = [];
+                    for (let j = gens[Gen - 1] + 1; j <= gens[Gen]; j++) {
+                        const response = await axios.get("https://pokeapi.co/api/v2/pokemon/" + j + "/");
+                        if (type === 'type') {
+                            info.push(response.data);
+                        }
+                        else {
+                            response.data.types.map(ty => {
+                                if (type === ty.type.name) {
+                                    info.push(response.data);
+                                }
+                            });
+                        }
+
+
+                    }
+                    setPokemons(info);
+                    var info = [];
+                } catch (error) {
+                    setError(error); // Armazena qualquer erro que ocorra
+                }
+            }
+        }
+        filter(); // Chama a função fetchData ao montar o componente
+    }, [Gen, type, Order]);
+
+    useEffect(() => {
+        fetchName();
+    }, [name]);
+
+    const fetchName = async () => {
+        if (name === '') {
+            fetchData();
+        }
+        else {
+
+            try {
+                // Fazendo a requisição para a API e armazenando a resposta
+                var info = [];
+                const response = await axios.get("https://pokeapi.co/api/v2/pokemon/" + name + "/");
+                info.push(response.data);
+                setPokemons(info);
+
+            } catch (error) {
+                setError(error); // Armazena qualquer erro que ocorra
+            }
+        }
+    }
