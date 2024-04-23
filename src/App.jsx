@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
+import { useTrail, animated } from 'react-spring';
 import axios from 'axios';
 import './App.css'
 
@@ -9,35 +10,32 @@ function App() {
 
     const [pokemons, setPokemons] = useState([]); // Estado para armazenar os usuários
 
-    const [filter, setFilter] = useState(false)
+    const trail = useTrail(pokemons.length, {
+        from: {
+            opacity: 0,
+            transform: 'translateX(-20px)',
+            contentvisibility: 'hidden'
+        }, // Estado inicial da animação
+        to: { opacity: 1, transform: 'translateX(0px)' },     // Estado final da animação
+        delay: 1000,                                         // Atraso inicial para começar a animação
+        config: { duration: 200 }, // Duração de cada animação
+    });
 
+    const [filter, setFilter] = useState(false);
     const [RendersMax, setRendersMax] = useState(1);
-    const [RendersMin, setRendersMin] = useState(0);
-
     const [Gens, setGens] = useState([1, 151, 251, 386, 494, 649, 721, 809, 905, 1025]);
     const [Gen, setGen] = useState('Generations');
-
     const [error, setError] = useState(null); // Estado para armazenar um possível erro
-
     const [ref, inView] = useInView({
         threshold: 1 // 0 significa que o callback será executado assim que um pixel for visível
     });
-
     const [show, setShow] = useState('');
     const [type, setType] = useState('type');
-    const [Order, setOrder] = useState('Order');
+    const [Region, setRegion] = useState('Region');
     const [name, setName] = useState('');
 
+    const [animation, setAnimation] = useState('');
 
-    function resetAll(){
-        setRendersMax(1);
-        setPokemons([]);
-        setFilter(false);
-        setGen('Generations');
-        setName('');
-        setType('type');
-        fetchData();
-    }
 
     function reset() {
         setRendersMax(1);
@@ -46,39 +44,24 @@ function App() {
 
     useEffect(() => {
         reset();
-        if (name === '') {
-            setFilter(false);
+        if (type != 'type' || Gen != 'Generations') {
+            setFilter(true);
+            reset();
         }
         else {
-            setFilter(true);
-            fetchName();
+            reset();
+            setFilter(false);
         }
-    }, [name]);
+    }, [Gen, type]);
 
-    const fetchName = async () => {
 
+    const fetchData = async () => {
         try {
             // Fazendo a requisição para a API e armazenando a resposta
             var info = [];
-            const response = await axios.get("https://pokeapi.co/api/v2/pokemon/" + name + "/");
-            info.push(response.data);
-            setPokemons(info);
+            for (let j = 1; j <= 30; j++) {
 
-        } catch (error) {
-            setError(error); // Armazena qualquer erro que ocorra
-        }
-
-    }
-
-
-    const fetchFilter = async (Gen) => {
-        console.log('aqui')
-        try {
-            // Fazendo a requisição para a API e armazenando a resposta
-            var info = [];
-            for (let j = Gens[Gen - 1] + 1; j <= Gens[Gen]; j++) {
-
-                const response = await axios.get("https://pokeapi.co/api/v2/pokemon/" + j + "/");
+                const response = await axios.get("https://pokeapi.co/api/v2/pokemon/" + (j + pokemons.length) + "/");
                 if (type === 'type') {
                     info.push(response.data);
                 }
@@ -90,32 +73,16 @@ function App() {
                     });
                 }
             }
-            setPokemons(info);
+            setPokemons([...pokemons, ...info]);
         } catch (error) {
             setError(error); // Armazena qualquer erro que ocorra
         }
-
-    }
-    useEffect(() => {
-        reset();
-        if (Gen != 'Generations') {
-            setFilter(true);
-            fetchFilter(Gen);
-        }
-        else {
-            setFilter(false)
-        }
-    }, [Gen, type]);
-    useEffect(() => {
-        reset();
-    }, [type]);
-
-
-    const fetchData = async (RendersMin, RendersMax) => {
+    };
+    const fetchFilter = async (RendersMin, RendersMax) => {
         try {
             // Fazendo a requisição para a API e armazenando a resposta
             var info = [];
-            for (let j = RendersMin + 1; j <= RendersMax; j++) {
+            for (let j = RendersMin; j <= RendersMax; j++) {
 
                 const response = await axios.get("https://pokeapi.co/api/v2/pokemon/" + j + "/");
                 if (type === 'type') {
@@ -135,18 +102,72 @@ function App() {
         }
     };
 
+
     useEffect(() => {
         const handleScroll = async () => {
-            if (inView && !filter) {
-                fetchData(Gens[RendersMax - 1], Gens[RendersMax]);
-                setRendersMax(RendersMax + 1)
+            if (inView) {
+                if (!filter) {
+                    fetchData();
+                }
+                else if (filter) {
+                    if (name === '') {
+                        if (Gen === 'Generations') {
+                            fetchFilter(Gens[RendersMax - 1] + 1, Gens[RendersMax]);
+                            setRendersMax(RendersMax + 1)
+                        } else {
+                            if (pokemons.length === 0) {
+                                fetchFilter(Gens[Gen - 1] + 1, Gens[Gen]);
+                            }
+
+                        }
+                    }
+
+                }
+
             }
         }
         handleScroll();
     }, [inView]);
 
 
+    useEffect(() => {
+        if (pokemons.length < 20 && pokemons.length != 0 && filter && name === '' || type === 'dark') {
+            fetchFilter(Gens[RendersMax - 1] + 1, Gens[RendersMax]);
+            setRendersMax(RendersMax + 1)
+        }
+    }, [pokemons])
 
+    const fetchName = async () => {
+
+        try {
+            // Fazendo a requisição para a API e armazenando a resposta
+            var info = [];
+            const response = await axios.get("https://pokeapi.co/api/v2/pokemon/" + name + "/");
+            info.push(response.data);
+            setPokemons(info);
+
+        } catch (error) {
+            setError(error); // Armazena qualquer erro que ocorra
+        }
+
+    }
+    useEffect(() => {
+        if (name != '') {
+            setFilter(true);
+            reset();
+            fetchName();
+        }
+        else {
+            setFilter(false);
+            reset();
+            fetchData();
+        }
+    }, [name]);
+
+    const Animation = (index) => {
+        const element = document.getElementById(index);
+        element.classList.add('card-roll');
+    }
     return (
         <div className='App'>
             <div className='header'>
@@ -164,9 +185,9 @@ function App() {
             </div>
             <div className='search'>
                 <div className='input'>
-                    <input type="search" placeholder='Search'  value={name} onChange={(e) => setName(e.target.value)} />
+                    <input type="search" placeholder='Search' value={name} onChange={(e) => setName(e.target.value)} />
                     <i class="fa-solid fa-magnifying-glass"></i>
-                    <i class="fa-solid fa-rotate-right" onClick={resetAll}></i>
+                    <i class="fa-solid fa-rotate-right" ></i>
                 </div>
 
                 <div className='filter'>
@@ -214,53 +235,60 @@ function App() {
                         </ul>
                     </div>
 
-                    <div className='f-order' onMouseMove={() => setShow('Order')} onMouseLeave={() => setShow('')}>
-                        <div className={`select ${Order != 'Order' ? Order : 'Order'} Order`}>
-                            <h4>{Order}</h4>
+                    <div className='f-Region' onMouseMove={() => setShow('Region')} onMouseLeave={() => setShow('')}>
+                        <div className={`select ${Region != 'Region' ? Region : 'Region'} Region`}>
+                            <h4>{Region}</h4>
                         </div>
-                        <ul name="options" id="options" className={`options ${show === 'Order' ? 'show' : ''}`}>
-                            <li value="Order" onClick={() => setOrder('Order')}>Order</li>
-                            <li value="number" onClick={() => setOrder('by number')}>By number</li>
-                            <li value="cresente" onClick={() => setOrder('Cresente')}>cresente</li>
-                            <li value="decresente" onClick={() => setOrder('Degresente')}>degresente</li>
-                            <li value="Alfabect" onClick={() => setOrder('Alfabetc')}>Alfabetc</li>
+                        <ul name="options" id="options" className={`options ${show === 'Region' ? 'show' : ''}`}>
+                            <li value="Region" onClick={() => setRegion('Region')}>Region</li>
+                            <li value="number" onClick={() => setRegion('by number')}>By number</li>
+                            <li value="cresente" onClick={() => setRegion('Cresente')}>cresente</li>
+                            <li value="decresente" onClick={() => setRegion('Degresente')}>degresente</li>
+                            <li value="Alfabect" onClick={() => setRegion('Alfabetc')}>Alfabetc</li>
                         </ul>
 
                     </div>
 
                     <input type='checkbox' />
                     <label htmlFor="">Only Legendary</label>
-                    <input type="checkbox" />
-                    <label htmlFor="">Only Semi-Legendary</label>
                 </div>
 
             </div>
             <div className='results'>
-                {pokemons && pokemons.map(pokemon => (
-                    <div className="card">
-                        <div className='img'>
-                            <img src={pokemon.sprites.other["official-artwork"].front_default} alt="" />
-                        </div>
-
-                        <div className='info'>
-                            <div className='container'>
-                                <div className='status'>
-                                    <h3>{pokemon.name}</h3>
-                                    <div className='types'>
-                                        {pokemon.types.map(type => (
-                                            <div className={`type1 ${type.type.name}`}>
-                                                <span>{type.type.name}</span>
+                {pokemons && trail.map((props, index) => (
+                    <animated.div key={index} style={props}>
+                        <div className='card'>
+                            <div className={`card-inner`} onClick={() => Animation(index)} key={index} id={index}>
+                                <div class="card-front">
+                                    <div className='img'>
+                                        <img src={pokemons[index].sprites.other["official-artwork"].front_default} alt="" />
+                                    </div>
+                                    <div className='info'>
+                                        <div className='container'>
+                                            <div className='status'>
+                                                <h3>{pokemons[index].name}</h3>
+                                                <div className='types'>
+                                                    {pokemons[index].types.map(type => (
+                                                        <div className={`type1 ${type.type.name}`}>
+                                                            <span>{type.type.name}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
                                             </div>
-                                        ))}
+                                        </div>
+                                        <div className='num'>
+                                            <span>N°{pokemons[index].id}</span>
+                                        </div>
                                     </div>
                                 </div>
+                                <div class="card-back">
+                                    <img src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/4f7705ec-8c49-4eed-a56e-c21f3985254c/dah43cy-a8e121cb-934a-40f6-97c7-fa2d77130dd5.png/v1/fill/w_1024,h_1420/pokemon_card_backside_in_high_resolution_by_atomicmonkeytcg_dah43cy-fullview.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9MTQyMCIsInBhdGgiOiJcL2ZcLzRmNzcwNWVjLThjNDktNGVlZC1hNTZlLWMyMWYzOTg1MjU0Y1wvZGFoNDNjeS1hOGUxMjFjYi05MzRhLTQwZjYtOTdjNy1mYTJkNzcxMzBkZDUucG5nIiwid2lkdGgiOiI8PTEwMjQifV1dLCJhdWQiOlsidXJuOnNlcnZpY2U6aW1hZ2Uub3BlcmF0aW9ucyJdfQ.9GzaYS7sd8RPY5FlHca09J9ZQZ9D9zI69Ru-BsbkLDA" alt="" />
+                                </div>
                             </div>
-                            <div className='num'>
-                                <span>N°{pokemon.id}</span>
-                            </div>
-                        </div>
 
-                    </div>
+                        </div>
+                    </animated.div>
+
                 ))}
             </div>
             <div ref={ref}>Carregando itens...</div>

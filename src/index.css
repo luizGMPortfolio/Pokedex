@@ -6,7 +6,7 @@ html,body{
     font-style: normal;
     margin: 0;
     padding: 0;
-    background-color: #929292
+    background-color: #929292;
     
 }
 
@@ -23,7 +23,7 @@ h4{
   margin: 0;
 }
 
-.f-types,.f-order{
+.f-types,.f-Region{
   width: 120px;
   height: 40px;
 
@@ -63,6 +63,7 @@ h4{
 }
 .show{
   display: flex;
+  z-index: 10;
 }
 li{
   width: 90%;
